@@ -1,15 +1,22 @@
-﻿/*
- * Justin Fussell ST10280758 Group 3
- */
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace EventEase.Models
 {
-    public class EventEaseDbContext(DbContextOptions<EventEaseDbContext> options) : DbContext(options)
+    public class EventEaseDbContext : DbContext
     {
-        public DbSet<Venue> Venues { get; set; }
-        public DbSet<Event> Events { get; set; }
-        public DbSet<Booking> Bookings { get; set; }
+        public EventEaseDbContext(DbContextOptions<EventEaseDbContext> options) : base(options)
+        {
+        }
+
+        public DbSet<Venue> Venue { get; set; }
+        public DbSet<Event> Event { get; set; }
+        public DbSet<Booking> Booking { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Venue>().ToTable("Venue");
+            modelBuilder.Entity<Event>().ToTable("Event");
+            modelBuilder.Entity<Booking>().ToTable("Booking");
+        }
     }
 }
-//*******************************************************END OF FILE*****************************************************************

@@ -1,6 +1,4 @@
-﻿Here’s the **README.md** content formatted as plain text, ready for you to copy and paste directly into your `README.md` file. It includes all the information—overview, features, prerequisites, project structure, setup, usage, deployment options, troubleshooting, contributors, and license—structured with Markdown syntax. Just copy this entire block and paste it into your file.
-
----
+﻿# GitHub Repository: https://github.com/VCCT-CLDV6211-2025-G3/ST10280758_EventEase_Part1.git
 
 # EventEase Venue Booking System
 

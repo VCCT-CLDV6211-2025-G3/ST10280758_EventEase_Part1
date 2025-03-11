@@ -19,7 +19,7 @@ namespace EventEase.Controllers
         // GET: /Bookings
         public async Task<IActionResult> Index()
         {
-            var bookings = await _context.Bookings
+            var bookings = await _context.Booking
                 .Include(b => b.Event)
                 .Include(b => b.Venue)
                 .ToListAsync();
@@ -31,7 +31,7 @@ namespace EventEase.Controllers
         {
             if (id == null) return NotFound();
 
-            var booking = await _context.Bookings
+            var booking = await _context.Booking
                 .Include(b => b.Event)
                 .Include(b => b.Venue)
                 .FirstOrDefaultAsync(m => m.BookingId == id);
@@ -43,8 +43,8 @@ namespace EventEase.Controllers
         // GET: /Bookings/Create
         public async Task<IActionResult> Create()
         {
-            ViewBag.Events = await _context.Events.ToListAsync();
-            ViewBag.Venues = await _context.Venues.ToListAsync();
+            ViewBag.Events = await _context.Event.ToListAsync();
+            ViewBag.Venues = await _context.Venue.ToListAsync();
             return View();
         }
 
@@ -55,16 +55,16 @@ namespace EventEase.Controllers
         {
             if (ModelState.IsValid)
             {
-                var eventDetails = await _context.Events.FindAsync(booking.EventId);
+                var eventDetails = await _context.Event.FindAsync(booking.EventId);
                 if (eventDetails == null) return NotFound();
 
                 // Check for double bookings
-                var conflict = await _context.Bookings
+                var conflict = await _context.Booking
                     .Where(b => b.VenueId == booking.VenueId && b.EventId != booking.EventId)
-                    .AnyAsync(b => eventDetails.EventDate < _context.Events
+                    .AnyAsync(b => eventDetails.EventDate < _context.Event
                         .Where(e => e.EventId == b.EventId)
                         .Select(e => e.EndDate).First()
-                        && eventDetails.EndDate > _context.Events
+                        && eventDetails.EndDate > _context.Event
                         .Where(e => e.EventId == b.EventId)
                         .Select(e => e.EventDate).First());
                 if (conflict)
@@ -78,8 +78,8 @@ namespace EventEase.Controllers
                     return RedirectToAction(nameof(Index));
                 }
             }
-            ViewBag.Events = await _context.Events.ToListAsync();
-            ViewBag.Venues = await _context.Venues.ToListAsync();
+            ViewBag.Events = await _context.Event.ToListAsync();
+            ViewBag.Venues = await _context.Venue.ToListAsync();
             return View(booking);
         }
 
@@ -88,11 +88,11 @@ namespace EventEase.Controllers
         {
             if (id == null) return NotFound();
 
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Booking.FindAsync(id);
             if (booking == null) return NotFound();
 
-            ViewBag.Events = await _context.Events.ToListAsync();
-            ViewBag.Venues = await _context.Venues.ToListAsync();
+            ViewBag.Events = await _context.Event.ToListAsync();
+            ViewBag.Venues = await _context.Venue.ToListAsync();
             return View(booking);
         }
 
@@ -117,8 +117,8 @@ namespace EventEase.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.Events = await _context.Events.ToListAsync();
-            ViewBag.Venues = await _context.Venues.ToListAsync();
+            ViewBag.Events = await _context.Event.ToListAsync();
+            ViewBag.Venues = await _context.Venue.ToListAsync();
             return View(booking);
         }
 
@@ -127,7 +127,7 @@ namespace EventEase.Controllers
         {
             if (id == null) return NotFound();
 
-            var booking = await _context.Bookings
+            var booking = await _context.Booking
                 .Include(b => b.Event)
                 .Include(b => b.Venue)
                 .FirstOrDefaultAsync(m => m.BookingId == id);
@@ -141,10 +141,10 @@ namespace EventEase.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Booking.FindAsync(id);
             if (booking != null)
             {
-                _context.Bookings.Remove(booking);
+                _context.Booking.Remove(booking);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
@@ -152,7 +152,7 @@ namespace EventEase.Controllers
 
         private bool BookingExists(int id)
         {
-            return _context.Bookings.Any(b => b.BookingId == id);
+            return _context.Booking.Any(b => b.BookingId == id);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace EventEase.Controllers
         // GET: /Events
         public async Task<IActionResult> Index()
         {
-            var events = await _context.Events
+            var events = await _context.Event
                 .Include(e => e.Venue)
                 .ToListAsync();
             return View(events);
@@ -30,7 +30,7 @@ namespace EventEase.Controllers
         {
             if (id == null) return NotFound();
 
-            var @event = await _context.Events
+            var @event = await _context.Event
                 .Include(e => e.Venue)
                 .FirstOrDefaultAsync(m => m.EventId == id);
             if (@event == null) return NotFound();
@@ -41,7 +41,7 @@ namespace EventEase.Controllers
         // GET: /Events/Create
         public async Task<IActionResult> Create()
         {
-            ViewBag.Venues = await _context.Venues.ToListAsync();
+            ViewBag.Venues = await _context.Venue.ToListAsync();
             return View();
         }
 
@@ -56,7 +56,7 @@ namespace EventEase.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.Venues = await _context.Venues.ToListAsync();
+            ViewBag.Venues = await _context.Venue.ToListAsync();
             return View(@event);
         }
 
@@ -65,10 +65,10 @@ namespace EventEase.Controllers
         {
             if (id == null) return NotFound();
 
-            var @event = await _context.Events.FindAsync(id);
+            var @event = await _context.Event.FindAsync(id);
             if (@event == null) return NotFound();
 
-            ViewBag.Venues = await _context.Venues.ToListAsync();
+            ViewBag.Venues = await _context.Venue.ToListAsync();
             return View(@event);
         }
 
@@ -93,7 +93,7 @@ namespace EventEase.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.Venues = await _context.Venues.ToListAsync();
+            ViewBag.Venues = await _context.Venue.ToListAsync();
             return View(@event);
         }
 
@@ -102,7 +102,7 @@ namespace EventEase.Controllers
         {
             if (id == null) return NotFound();
 
-            var @event = await _context.Events
+            var @event = await _context.Event
                 .Include(e => e.Venue)
                 .FirstOrDefaultAsync(m => m.EventId == id);
             if (@event == null) return NotFound();
@@ -115,10 +115,10 @@ namespace EventEase.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var @event = await _context.Events.FindAsync(id);
+            var @event = await _context.Event.FindAsync(id);
             if (@event != null)
             {
-                _context.Events.Remove(@event);
+                _context.Event.Remove(@event);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
@@ -126,7 +126,7 @@ namespace EventEase.Controllers
 
         private bool EventExists(int id)
         {
-            return _context.Events.Any(e => e.EventId == id);
+            return _context.Event.Any(e => e.EventId == id);
         }
     }
 }

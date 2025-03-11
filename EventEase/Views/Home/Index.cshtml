@@ -1,33 +1,11 @@
-﻿@model IEnumerable<EventEase.Models.Venue>
-<h2>Venues</h2>
-<a asp-action="Create" class="btn btn-primary">Add New Venue</a>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Location</th>
-            <th>Capacity</th>
-            <th>Image</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (Model != null && Model.Any())
-        {
-            @foreach (var venue in Model)
-            {
-                <tr>
-                    <td>@venue.VenueName</td>
-                    <td>@venue.Location</td>
-                    <td>@venue.Capacity</td>
-                    <td><img src="@venue.ImageUrl" alt="Venue Image" width="50" /></td>
-                </tr>
-            }
-        }
-        else
-        {
-            <tr>
-                <td colspan="4">No venues available.</td>
-            </tr>
-        }
-    </tbody>
-</table>
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center py-5">
+    <h1 class="display-4 text-primary">Welcome to EventEase</h1>
+    <p class="lead">Manage your venues and events with ease.</p>
+    <p>
+        <a asp-controller="Venue" asp-action="Index" class="btn btn-custom btn-lg">View Venues</a>
+    </p>
+</div>

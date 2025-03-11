@@ -1,0 +1,30 @@
+﻿@model EventEase.Models.Venue
+
+<h2>Delete Venue</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="text-center text-danger">Are you sure you want to delete this?</h3>
+        <div class="text-center mb-3">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="Venue Image" width="150" class="img-thumbnail rounded-circle" />
+            }
+        </div>
+        <dl class="row">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.VenueName</dd>
+            <dt class="col-sm-3">Location</dt>
+            <dd class="col-sm-9">@Model.Location</dd>
+            <dt class="col-sm-3">Capacity</dt>
+            <dd class="col-sm-9">@Model.Capacity</dd>
+        </dl>
+        <form asp-controller="Venue" asp-action="Delete">
+            <input type="hidden" asp-for="VenueId" />
+            <div class="text-center mt-3">
+                <input type="submit" value="Delete" class="btn btn-danger" />
+                <a asp-controller="Venue" asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
