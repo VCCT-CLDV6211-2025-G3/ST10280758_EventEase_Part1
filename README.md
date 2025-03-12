@@ -67,13 +67,6 @@ CREATE TABLE Booking (
 );
 ```
 
-### 4. Run the App
-Launch the application:
-```
-dotnet run
-```
-- Access at `https://localhost:5001/Venues` (port may vary—check console).
-
 ## Troubleshooting
 - **Database Not Found**: Ensure LocalDB is running (`sqllocaldb start MSSQLLocalDB`) and the connection string is correct.
 - **Table Errors**: If tables exist, drop them (`DROP TABLE Booking; DROP TABLE Event; DROP TABLE Venue;`) before recreating.
