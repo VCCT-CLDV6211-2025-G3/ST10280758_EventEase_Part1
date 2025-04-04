@@ -1,4 +1,5 @@
 ﻿# GitHub Repository: https://github.com/VCCT-CLDV6211-2025-G3/ST10280758_EventEase_Part1.git
+# Azure Web App URL: st10280758-btc0fpaserhjdtbg.southafricanorth-01.azurewebsites.net
 
 # EventEase Venue Booking System
 
