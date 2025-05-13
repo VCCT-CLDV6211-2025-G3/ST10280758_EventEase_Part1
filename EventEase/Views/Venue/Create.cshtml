@@ -1,38 +1,45 @@
-﻿@model EventEase.Models.Venue
+﻿@model EventEase.Models.VenueViewModel
+
+@{
+    ViewData["Title"] = "Add New Venue";
+}
 
 <h2>Add New Venue</h2>
 
 <div class="card">
     <div class="card-body">
-        <div class="alert alert-danger" role="alert" style="display: @(ViewData.ModelState.ErrorCount > 0 ? "block" : "none");">
-            <strong>Error!</strong> Please correct the following issues:
-            <ul>
-                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                {
-                    <li>@error.ErrorMessage</li>
-                }
-            </ul>
-        </div>
+        @if (ViewData.ModelState.ErrorCount > 0)
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>Error!</strong> Please correct the following issues:
+                <ul>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        }
         <form asp-controller="Venue" asp-action="Create" method="post" enctype="multipart/form-data">
             <div class="form-group mb-4">
                 <label asp-for="VenueName" class="control-label">Venue Name</label>
-                <input asp-for="VenueName" class="form-control" />
+                <input asp-for="VenueName" class="form-control" required />
                 <span asp-validation-for="VenueName" class="text-danger"></span>
             </div>
             <div class="form-group mb-4">
                 <label asp-for="Location" class="control-label">Location</label>
-                <input asp-for="Location" class="form-control" />
+                <input asp-for="Location" class="form-control" required />
                 <span asp-validation-for="Location" class="text-danger"></span>
             </div>
             <div class="form-group mb-4">
                 <label asp-for="Capacity" class="control-label">Capacity</label>
-                <input asp-for="Capacity" class="form-control" />
+                <input asp-for="Capacity" class="form-control" type="number" min="1" required />
                 <span asp-validation-for="Capacity" class="text-danger"></span>
             </div>
             <div class="form-group mb-4">
-                <label for="ImageFile" class="control-label">Upload Image</label>
-                <input type="file" name="ImageFile" class="form-control" accept="image/*" />
-                <span class="text-danger" id="imageFileError"></span> <!-- Placeholder for custom error -->
+                <label asp-for="ImageFile" class="control-label">Upload Image</label>
+                <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-custom" />
@@ -43,14 +50,5 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-    <script>
-        // Custom script to display image file errors
-        var modelState = @Html.Raw(Json.Serialize(ViewData.ModelState));
-        if (modelState[""].errors && modelState[""].errors.length > 0) {
-            document.getElementById("imageFileError").innerText = modelState[""].errors[0].errorMessage;
-        }
-    </script>
+    <partial name="_ValidationScriptsPartial" />
 }

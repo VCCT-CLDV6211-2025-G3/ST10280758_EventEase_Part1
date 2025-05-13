@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http; // For IFormFile
 
 namespace EventEase.Models
 {
-    public class Event
+    public class EventViewModel
     {
         public int EventId { get; set; }
 
         [Required(ErrorMessage = "Event name is required.")]
         [StringLength(100, ErrorMessage = "Event name cannot exceed 100 characters.")]
-        public string EventName { get; set; } = string.Empty;
+        public string? EventName { get; set; }
 
         [Required(ErrorMessage = "Event start date is required.")]
         [DataType(DataType.DateTime)]
@@ -21,9 +22,8 @@ namespace EventEase.Models
         [Required(ErrorMessage = "Venue is required.")]
         public int VenueId { get; set; }
 
-        public Venue? Venue { get; set; }
-        public List<Booking>? Bookings { get; set; }
+        public string? ImageUrl { get; set; }
 
-        public string? ImageUrl { get; set; } // ADD THIS LINE!
+        public IFormFile? ImageFile { get; set; }
     }
 }

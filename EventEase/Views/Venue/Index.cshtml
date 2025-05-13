@@ -1,10 +1,25 @@
 ﻿@model IEnumerable<EventEase.Models.Venue>
+@{
+    ViewData["Title"] = "Venues";
+}
 
 <h2>Venues</h2>
 
-<p class="text-end">
-    <a asp-controller="Venue" asp-action="Create" class="btn btn-custom">Add New Venue</a>
-</p>
+@* Display TempData messages *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (User.IsInRole("Admin"))
+{
+    <p class="text-end">
+        <a asp-controller="Venue" asp-action="Create" class="btn btn-custom">Add New Venue</a>
+    </p>
+}
 
 <div class="card">
     <div class="card-body">
@@ -30,17 +45,21 @@
                             <td>
                                 @if (!string.IsNullOrEmpty(venue.ImageUrl))
                                 {
-                                    <img src="@venue.ImageUrl" alt="Venue Image" width="50" class="img-thumbnail rounded-circle" />
+                                    <img src="@venue.ImageUrl" alt="Venue Image" width="50" class="img-thumbnail rounded-circle"
+                                         onerror="this.onerror=null; this.src='https://st10280758eventease.blob.core.windows.net/images/default.jpg';" />
                                 }
                                 else
                                 {
-                                    <span>No Image</span>
+                                    <img src="https://st10280758eventease.blob.core.windows.net/images/default.jpg" alt="Default Image" width="50" class="img-thumbnail rounded-circle" />
                                 }
                             </td>
                             <td>
-                                <a asp-controller="Venue" asp-action="Edit" asp-route-id="@venue.VenueId" class="btn btn-sm btn-custom me-2">Edit</a>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a asp-controller="Venue" asp-action="Edit" asp-route-id="@venue.VenueId" class="btn btn-sm btn-custom me-2">Edit</a>
+                                    <a asp-controller="Venue" asp-action="Delete" asp-route-id="@venue.VenueId" class="btn btn-sm btn-danger">Delete</a>
+                                }
                                 <a asp-controller="Venue" asp-action="Details" asp-route-id="@venue.VenueId" class="btn btn-sm btn-info me-2">Details</a>
-                                <a asp-controller="Venue" asp-action="Delete" asp-route-id="@venue.VenueId" class="btn btn-sm btn-danger">Delete</a>
                             </td>
                         </tr>
                     }

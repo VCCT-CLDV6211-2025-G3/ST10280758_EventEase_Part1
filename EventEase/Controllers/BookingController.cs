@@ -1,107 +1,152 @@
-﻿/*
- * Justin Fussell ST10280758 Group 3
- */
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EventEase.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
 
 namespace EventEase.Controllers
 {
-    public class BookingsController : Controller
+    public class BookingController : Controller
     {
         private readonly EventEaseDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<BookingController> _logger;
 
-        public BookingsController(EventEaseDbContext context)
+        public BookingController(EventEaseDbContext context, UserManager<IdentityUser> userManager, ILogger<BookingController> logger)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        // GET: /Bookings
         public async Task<IActionResult> Index()
         {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
             var bookings = await _context.Booking
                 .Include(b => b.Event)
-                .Include(b => b.Venue)
+                .Include(b => b.User)
                 .ToListAsync();
             return View(bookings);
         }
 
-        // GET: /Bookings/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var booking = await _context.Booking
-                .Include(b => b.Event)
-                .Include(b => b.Venue)
-                .FirstOrDefaultAsync(m => m.BookingId == id);
-            if (booking == null) return NotFound();
-
-            return View(booking);
-        }
-
-        // GET: /Bookings/Create
+        // GET: Booking/Create
         public async Task<IActionResult> Create()
         {
-            ViewBag.Events = await _context.Event.ToListAsync();
-            ViewBag.Venues = await _context.Venue.ToListAsync();
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
+            // Populate the dropdown list for Events
+            ViewBag.EventList = new SelectList(await _context.Event
+                .Include(e => e.Venue)
+                .ToListAsync(), "EventId", "EventName");
+
             return View();
         }
 
-        // POST: /Bookings/Create
+        // POST: Booking/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EventId,VenueId,BookingDate")] Booking booking)
+        public async Task<IActionResult> Create([Bind("EventId,BookingDate")] Booking booking)
         {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
             if (ModelState.IsValid)
             {
-                var eventDetails = await _context.Event.FindAsync(booking.EventId);
-                if (eventDetails == null) return NotFound();
+                // Check for double booking
+                bool isDoubleBooked = await _context.Booking.AnyAsync(b =>
+                    b.EventId == booking.EventId &&
+                    b.BookingDate == booking.BookingDate);
 
-                // Check for double bookings
-                var conflict = await _context.Booking
-                    .Where(b => b.VenueId == booking.VenueId && b.EventId != booking.EventId)
-                    .AnyAsync(b => eventDetails.EventDate < _context.Event
-                        .Where(e => e.EventId == b.EventId)
-                        .Select(e => e.EndDate).First()
-                        && eventDetails.EndDate > _context.Event
-                        .Where(e => e.EventId == b.EventId)
-                        .Select(e => e.EventDate).First());
-                if (conflict)
+                if (isDoubleBooked)
                 {
-                    ModelState.AddModelError("", "This venue is already booked for that time.");
+                    ModelState.AddModelError("BookingDate", "This event is already booked for this date and time.");
+                    ViewBag.EventList = new SelectList(await _context.Event
+                        .Include(e => e.Venue)
+                        .ToListAsync(), "EventId", "EventName", booking.EventId);
+                    return View(booking);
+                }
+
+                // Get the current user's ID
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    booking.UserId = user.Id;
+                    _context.Add(booking);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Booking created successfully!";
+                    return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    _context.Add(booking);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
+                    ModelState.AddModelError("", "User not authenticated.");
+                    ViewBag.EventList = new SelectList(await _context.Event
+                        .Include(e => e.Venue)
+                        .ToListAsync(), "EventId", "EventName", booking.EventId);
+                    return View(booking);
                 }
             }
-            ViewBag.Events = await _context.Event.ToListAsync();
-            ViewBag.Venues = await _context.Venue.ToListAsync();
+
+            // If validation fails, repopulate the dropdown
+            ViewBag.EventList = new SelectList(await _context.Event
+                .Include(e => e.Venue)
+                .ToListAsync(), "EventId", "EventName", booking.EventId);
             return View(booking);
         }
 
-        // GET: /Bookings/Edit/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null || _context.Booking == null)
+            {
+                return NotFound();
+            }
+
+            var booking = await _context.Booking
+                .Include(b => b.Event)
+                .Include(b => b.User)
+                .FirstOrDefaultAsync(m => m.BookingId == id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            return View(booking);
+        }
+
+        // GET: Booking/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null || _context.Booking == null)
+            {
+                return NotFound();
+            }
 
             var booking = await _context.Booking.FindAsync(id);
-            if (booking == null) return NotFound();
-
-            ViewBag.Events = await _context.Event.ToListAsync();
-            ViewBag.Venues = await _context.Venue.ToListAsync();
+            if (booking == null)
+            {
+                return NotFound();
+            }
+            ViewBag.EventList = new SelectList(await _context.Event.ToListAsync(), "EventId", "EventName", booking.EventId);
             return View(booking);
         }
 
-        // POST: /Bookings/Edit/5
+        // POST: Booking/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("BookingId,EventId,VenueId,BookingDate")] Booking booking)
+        public async Task<IActionResult> Edit(int id, [Bind("BookingId,EventId,UserId,BookingDate")] Booking booking)
         {
-            if (id != booking.BookingId) return NotFound();
+            if (id != booking.BookingId)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
@@ -109,51 +154,68 @@ namespace EventEase.Controllers
                 {
                     _context.Update(booking);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Booking updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!BookingExists(booking.BookingId)) return NotFound();
-                    throw;
+                    if (!BookingExists(booking.BookingId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.Events = await _context.Event.ToListAsync();
-            ViewBag.Venues = await _context.Venue.ToListAsync();
+            ViewBag.EventList = new SelectList(await _context.Event.ToListAsync(), "EventId", "EventName", booking.EventId);
             return View(booking);
         }
 
-        // GET: /Bookings/Delete/5
+        // GET: Booking/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null || _context.Booking == null)
+            {
+                return NotFound();
+            }
 
             var booking = await _context.Booking
                 .Include(b => b.Event)
-                .Include(b => b.Venue)
+                .Include(b => b.User)
                 .FirstOrDefaultAsync(m => m.BookingId == id);
-            if (booking == null) return NotFound();
+            if (booking == null)
+            {
+                return NotFound();
+            }
 
             return View(booking);
         }
 
-        // POST: /Bookings/Delete/5
+        // POST: Booking/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
             var booking = await _context.Booking.FindAsync(id);
             if (booking != null)
             {
                 _context.Booking.Remove(booking);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Booking deleted successfully!";
             }
             return RedirectToAction(nameof(Index));
         }
 
         private bool BookingExists(int id)
         {
-            return _context.Booking.Any(b => b.BookingId == id);
+            return (_context.Booking?.Any(e => e.BookingId == id)).GetValueOrDefault();
         }
     }
 }
-//*******************************************************END OF FILE*****************************************************************

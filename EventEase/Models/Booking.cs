@@ -1,16 +1,22 @@
-﻿/*
- * Justin Fussell ST10280758 Group 3
- */
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
+
 namespace EventEase.Models
 {
     public class Booking
     {
         public int BookingId { get; set; }
+
+        [Required(ErrorMessage = "Event is required.")]
         public int EventId { get; set; }
-        public int VenueId { get; set; }
+        public Event? Event { get; set; }
+
+        [Required(ErrorMessage = "User is required.")]
+        public string UserId { get; set; } = string.Empty;
+        public IdentityUser? User { get; set; }
+
+        [Required(ErrorMessage = "Booking date is required.")]
+        [DataType(DataType.DateTime)]
         public DateTime BookingDate { get; set; }
-        public required Event Event { get; set; } // Navigation property
-        public required Venue Venue { get; set; } // Navigation property
     }
 }
-//*******************************************************END OF FILE*****************************************************************

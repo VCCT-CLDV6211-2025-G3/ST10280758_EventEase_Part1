@@ -1,32 +1,49 @@
-﻿@model EventEase.Models.Venue
+﻿@model EventEase.Models.VenueViewModel
+
+@{
+    ViewData["Title"] = "Edit Venue";
+}
 
 <h2>Edit Venue</h2>
 
 <div class="card">
     <div class="card-body">
+        @if (ViewData.ModelState.ErrorCount > 0)
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>Error!</strong> Please correct the following issues:
+                <ul>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        }
         <form asp-controller="Venue" asp-action="Edit" method="post" enctype="multipart/form-data">
             <input type="hidden" asp-for="VenueId" />
             <div class="form-group mb-4">
-                <label asp-for="VenueName" class="control-label"></label>
-                <input asp-for="VenueName" class="form-control" />
+                <label asp-for="VenueName" class="control-label">Venue Name</label>
+                <input asp-for="VenueName" class="form-control" required />
                 <span asp-validation-for="VenueName" class="text-danger"></span>
             </div>
             <div class="form-group mb-4">
-                <label asp-for="Location" class="control-label"></label>
-                <input asp-for="Location" class="form-control" />
+                <label asp-for="Location" class="control-label">Location</label>
+                <input asp-for="Location" class="form-control" required />
                 <span asp-validation-for="Location" class="text-danger"></span>
             </div>
             <div class="form-group mb-4">
-                <label asp-for="Capacity" class="control-label"></label>
-                <input asp-for="Capacity" class="form-control" />
+                <label asp-for="Capacity" class="control-label">Capacity</label>
+                <input asp-for="Capacity" class="form-control" type="number" min="1" required />
                 <span asp-validation-for="Capacity" class="text-danger"></span>
             </div>
             <div class="form-group mb-4">
-                <label for="ImageFile" class="control-label">Upload New Image</label>
-                <input type="file" name="ImageFile" class="form-control" accept="image/*" />
+                <label asp-for="ImageFile" class="control-label">Upload New Image</label>
+                <input asp-for="ImageFile" class="form-control" accept="image/*" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
                 @if (!string.IsNullOrEmpty(Model.ImageUrl))
                 {
-                    <img src="@Model.ImageUrl" alt="Current Image" width="100" class="img-thumbnail rounded-circle mt-2" />
+                    <img src="@Model.ImageUrl" alt="Current Image" width="100" class="img-thumbnail rounded-circle mt-2" onerror="this.src='https://st10280758eventease.blob.core.windows.net/images/default.jpg'" />
                 }
             </div>
             <div class="form-group">
@@ -38,7 +55,5 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 }

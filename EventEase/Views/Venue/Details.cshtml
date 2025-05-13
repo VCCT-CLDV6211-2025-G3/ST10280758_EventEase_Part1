@@ -1,30 +1,41 @@
 ﻿@model EventEase.Models.Venue
 
+@{
+    ViewData["Title"] = "Venue Details";
+}
+
 <h2>Venue Details</h2>
 
 <div class="card">
     <div class="card-body">
-        <div class="text-center">
-            @if (!string.IsNullOrEmpty(Model.ImageUrl))
-            {
-                <img src="@Model.ImageUrl" alt="Venue Image" width="200" class="img-thumbnail rounded-circle mb-3" />
-            }
-            else
-            {
-                <span>No Image</span>
-            }
+        <div class="row align-items-center">
+            <div class="col-md-4 text-center">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" alt="Venue Image" width="200" class="img-thumbnail rounded-circle mb-3" onerror="this.src='https://st10280758eventease.blob.core.windows.net/images/default.jpg'" />
+                }
+                else
+                {
+                    <img src="https://st10280758eventease.blob.core.windows.net/images/default.jpg" alt="Default Image" width="200" class="img-thumbnail rounded-circle mb-3" />
+                }
+            </div>
+            <div class="col-md-8">
+                <dl class="row">
+                    <dt class="col-sm-3">Name</dt>
+                    <dd class="col-sm-9">@Model.VenueName</dd>
+                    <dt class="col-sm-3">Location</dt>
+                    <dd class="col-sm-9">@Model.Location</dd>
+                    <dt class="col-sm-3">Capacity</dt>
+                    <dd class="col-sm-9">@Model.Capacity</dd>
+                </dl>
+            </div>
         </div>
-        <dl class="row">
-            <dt class="col-sm-3">Name</dt>
-            <dd class="col-sm-9">@Model.VenueName</dd>
-            <dt class="col-sm-3">Location</dt>
-            <dd class="col-sm-9">@Model.Location</dd>
-            <dt class="col-sm-3">Capacity</dt>
-            <dd class="col-sm-9">@Model.Capacity</dd>
-        </dl>
     </div>
     <div class="card-footer text-center">
-        <a asp-controller="Venue" asp-action="Edit" asp-route-id="@Model.VenueId" class="btn btn-custom me-2">Edit</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Venue" asp-action="Edit" asp-route-id="@Model.VenueId" class="btn btn-custom me-2">Edit</a>
+        }
         <a asp-controller="Venue" asp-action="Index" class="btn btn-secondary">Back to List</a>
     </div>
 </div>

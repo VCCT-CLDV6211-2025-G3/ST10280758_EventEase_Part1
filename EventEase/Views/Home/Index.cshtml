@@ -5,7 +5,27 @@
 <div class="text-center py-5">
     <h1 class="display-4 text-primary">Welcome to EventEase</h1>
     <p class="lead">Manage your venues and events with ease.</p>
-    <p>
-        <a asp-controller="Venue" asp-action="Index" class="btn btn-custom btn-lg">View Venues</a>
-    </p>
+    <div class="my-4">
+        <p>
+            EventEase helps you create, manage, and book events seamlessly. Whether you're an admin organizing venues or a user looking for exciting events, we've got you covered!
+        </p>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <p>Welcome back, @User.Identity.Name! Explore your bookings or manage events.</p>
+            <div>
+                <a asp-controller="Venue" asp-action="Index" class="btn btn-custom btn-lg me-2">View Venues</a>
+                <a asp-controller="Event" asp-action="Index" class="btn btn-custom btn-lg me-2">View Events</a>
+                <a asp-controller="Booking" asp-action="Index" class="btn btn-custom btn-lg">My Bookings</a>
+            </div>
+        }
+        else
+        {
+            <p>Get started by registering or logging in to access all features.</p>
+            <div>
+                <a asp-controller="Venue" asp-action="Index" class="btn btn-custom btn-lg me-2">View Venues</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-custom btn-lg me-2">Register</a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-custom btn-lg">Login</a>
+            </div>
+        }
+    </div>
 </div>

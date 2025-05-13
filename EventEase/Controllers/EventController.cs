@@ -1,126 +1,243 @@
-﻿/*
- * Justin Fussell ST10280758 Group 3
- */
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EventEase.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Azure.Storage.Blobs;
 
 namespace EventEase.Controllers
 {
-    public class EventsController : Controller
+    public class EventController : Controller
     {
         private readonly EventEaseDbContext _context;
+        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<EventController> _logger;
 
-        public EventsController(EventEaseDbContext context)
+        public EventController(EventEaseDbContext context, IWebHostEnvironment environment, IConfiguration configuration, ILogger<EventController> logger)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        // GET: /Events
         public async Task<IActionResult> Index()
         {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
             var events = await _context.Event
                 .Include(e => e.Venue)
                 .ToListAsync();
             return View(events);
         }
 
-        // GET: /Events/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Create()
         {
-            if (id == null) return NotFound();
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
 
-            var @event = await _context.Event
-                .Include(e => e.Venue)
-                .FirstOrDefaultAsync(m => m.EventId == id);
-            if (@event == null) return NotFound();
-
-            return View(@event);
+            ViewBag.VenueList = new SelectList(_context.Venue, "VenueId", "VenueName");
+            return View(new EventViewModel());
         }
 
-        // GET: /Events/Create
-        public async Task<IActionResult> Create()
-        {
-            ViewBag.Venues = await _context.Venue.ToListAsync();
-            return View();
-        }
-
-        // POST: /Events/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EventName,EventDate,EndDate,Description,VenueId")] Event @event)
+        public async Task<IActionResult> Create(EventViewModel model)
         {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
             if (ModelState.IsValid)
             {
+                string? imageUrl = null;
+                if (model.ImageFile != null)
+                {
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ImageFile.FileName);
+                    var blobClient = new BlobClient(_configuration.GetConnectionString("AzureBlobStorage"), "images", fileName);
+                    using (var stream = model.ImageFile.OpenReadStream())
+                    {
+                        await blobClient.UploadAsync(stream, true);
+                    }
+                    imageUrl = blobClient.Uri.ToString();
+                }
+
+                var @event = new Event
+                {
+                    EventName = model.EventName ?? string.Empty,
+                    EventDate = model.EventDate,
+                    EndDate = model.EndDate,
+                    VenueId = model.VenueId,
+                    ImageUrl = imageUrl
+                };
+
                 _context.Add(@event);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Event created successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.Venues = await _context.Venue.ToListAsync();
-            return View(@event);
+
+            ViewBag.VenueList = new SelectList(_context.Venue, "VenueId", "VenueName", model.VenueId);
+            return View(model);
         }
 
-        // GET: /Events/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
-            if (id == null) return NotFound();
-
-            var @event = await _context.Event.FindAsync(id);
-            if (@event == null) return NotFound();
-
-            ViewBag.Venues = await _context.Venue.ToListAsync();
-            return View(@event);
-        }
-
-        // POST: /Events/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("EventId,EventName,EventDate,EndDate,Description,VenueId")] Event @event)
-        {
-            if (id != @event.EventId) return NotFound();
-
-            if (ModelState.IsValid)
+            if (_context == null)
             {
-                try
-                {
-                    _context.Update(@event);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!EventExists(@event.EventId)) return NotFound();
-                    throw;
-                }
-                return RedirectToAction(nameof(Index));
+                return StatusCode(500, "Database context is not initialized.");
             }
-            ViewBag.Venues = await _context.Venue.ToListAsync();
-            return View(@event);
-        }
 
-        // GET: /Events/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             var @event = await _context.Event
                 .Include(e => e.Venue)
                 .FirstOrDefaultAsync(m => m.EventId == id);
-            if (@event == null) return NotFound();
+
+            if (@event == null)
+            {
+                return NotFound();
+            }
 
             return View(@event);
         }
 
-        // POST: /Events/Delete/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var @event = await _context.Event.FindAsync(id);
+            if (@event == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new EventViewModel
+            {
+                EventId = @event.EventId,
+                EventName = @event.EventName,
+                EventDate = @event.EventDate,
+                EndDate = @event.EndDate,
+                VenueId = @event.VenueId,
+                ImageUrl = @event.ImageUrl
+            };
+            ViewBag.VenueList = new SelectList(_context.Venue, "VenueId", "VenueName", @event.VenueId);
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, EventViewModel model)
+        {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
+            if (id != model.EventId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var @event = await _context.Event.FindAsync(id);
+                if (@event == null)
+                {
+                    return NotFound();
+                }
+
+                @event.EventName = model.EventName ?? string.Empty;
+                @event.EventDate = model.EventDate;
+                @event.EndDate = model.EndDate;
+                @event.VenueId = model.VenueId;
+
+                if (model.ImageFile != null)
+                {
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ImageFile.FileName);
+                    var blobClient = new BlobClient(_configuration.GetConnectionString("AzureBlobStorage"), "images", fileName);
+                    using (var stream = model.ImageFile.OpenReadStream())
+                    {
+                        await blobClient.UploadAsync(stream, true);
+                    }
+                    @event.ImageUrl = model.ImageUrl;
+                }
+
+                _context.Update(@event);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Event updated successfully!";
+                return RedirectToAction(nameof(Index));
+            }
+            ViewBag.VenueList = new SelectList(_context.Venue, "VenueId", "VenueName", model.VenueId);
+            return View(model);
+        }
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var @event = await _context.Event
+                .Include(e => e.Venue)
+                .FirstOrDefaultAsync(m => m.EventId == id);
+            if (@event == null)
+            {
+                return NotFound();
+            }
+
+            return View(@event);
+        }
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var @event = await _context.Event.FindAsync(id);
-            if (@event != null)
+            if (_context == null)
             {
-                _context.Event.Remove(@event);
-                await _context.SaveChangesAsync();
+                return StatusCode(500, "Database context is not initialized.");
             }
+
+            var @event = await _context.Event.FindAsync(id);
+            if (@event == null)
+            {
+                return NotFound();
+            }
+
+            // Check if there are any bookings associated with this event
+            bool hasBookings = await _context.Booking.AnyAsync(b => b.EventId == id);
+            if (hasBookings)
+            {
+                ModelState.AddModelError("", "Cannot delete this event because it has associated bookings.");
+                return View(@event); // Return to the Delete confirmation view with the error
+            }
+
+            _context.Event.Remove(@event);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Event deleted successfully!";
             return RedirectToAction(nameof(Index));
         }
 
@@ -128,6 +245,23 @@ namespace EventEase.Controllers
         {
             return _context.Event.Any(e => e.EventId == id);
         }
+
+        public async Task<IActionResult> Search(string searchString)
+        {
+            if (_context == null)
+            {
+                return StatusCode(500, "Database context is not initialized.");
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+            var events = string.IsNullOrEmpty(searchString)
+                ? await _context.Event.Include(e => e.Venue).ToListAsync()
+                : await _context.Event
+                    .Include(e => e.Venue)
+                    .Where(e => e.EventName.Contains(searchString))
+                    .ToListAsync();
+
+            return View(events);
+        }
     }
 }
-//*******************************************************END OF FILE*****************************************************************

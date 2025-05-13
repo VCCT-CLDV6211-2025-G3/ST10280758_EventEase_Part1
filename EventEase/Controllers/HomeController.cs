@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using EventEase.Models;
+using System.Diagnostics;
 
 namespace EventEase.Controllers
 {
@@ -7,6 +9,16 @@ namespace EventEase.Controllers
         public IActionResult Index()
         {
             return View();
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }
