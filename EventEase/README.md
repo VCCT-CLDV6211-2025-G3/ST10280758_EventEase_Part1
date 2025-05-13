@@ -5,6 +5,7 @@
 
 ## Overview
 EventEase is a web-based application built with ASP.NET Core and Entity Framework Core to manage venue bookings. It supports CRUD operations for venues, events, and bookings, using a SQL Server LocalDB database (`EventEaseDB`) on `(localdb)\mssqllocaldb`). The system prevents double bookings and is designed for efficient event scheduling with flexible deployment options.
+Please note to select the "Part2" branch for the latest version of the code, as this branch contains the most recent updates and features. The "Part1" branch is an earlier version and may not include the latest enhancements or bug fixes.
 
 ### Features
 - **Venues**: Add, view, edit, and delete venues (name, location, capacity, optional image URL).
